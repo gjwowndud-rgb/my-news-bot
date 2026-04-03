@@ -2,21 +2,20 @@ name: Daily Investment Report
 
 on:
   schedule:
-    # 한국 시간 오전 7시 30분 설정 (UTC 22:30)
     - cron: '30 22 * * *'
-  workflow_dispatch: # 수동 실행 버튼 활성화
+  workflow_dispatch:
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4 # 버전 업그레이드
 
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5 # 버전 업그레이드
         with:
-          python-version: '3.9'
+          python-version: '3.11'
 
       - name: Install dependencies
         run: |
@@ -27,4 +26,5 @@ jobs:
           TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
           CHAT_ID: ${{ secrets.CHAT_ID }}
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-        run: python news_bot.py
+        # 파일명이 news_bot.py가 맞는지 꼭 확인하세요!
+        run: python newsnews_bot.py
