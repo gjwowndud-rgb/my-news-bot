@@ -30,22 +30,25 @@ def generate_report():
         - 가독성을 위해 이모지와 불렛포인트를 활용하여 가독성 확보.
         """
 
-        # 최신 SDK 문법: models.generate_content 사용
-        # 일일 쿼터가 넉넉한 gemini-1.5-flash 모델을 기본으로 설정합니다.
+        # [수정] 404 에러 방지를 위해 2026년 표준 모델인 gemini-2.0-flash를 사용합니다.
+        # models/ 접두사를 생략하고 모델 ID만 입력하는 것이 최신 SDK의 표준입니다.
         response = client.models.generate_content(
-            model='gemini-1.5-flash',
+            model='gemini-2.0-flash',
             contents=prompt
         )
         
+        if not response.text:
+            return "⚠️ AI가 빈 응답을 반환했습니다. 쿼터 또는 필터링 설정을 확인하세요."
+            
         return response.text
 
     except Exception as e:
-        # 에러 발생 시 내용을 리턴하여 텔레그램으로 원인을 확인할 수 있게 함
+        # 상세 에러 메시지를 텔레그램으로 전송하여 즉각 대응 가능하게 함
         return f"⚠️ 허렌버핏 리포트 생성 실패: {str(e)}"
 
 def send_telegram_message(text):
     if not text:
-        print("전송할 텍스트가 없습니다.")
+        print("전송할 내용이 없습니다.")
         return
         
     url = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage"
@@ -56,13 +59,12 @@ def send_telegram_message(text):
     }
     try:
         res = requests.post(url, json=payload)
-        # GitHub Actions 로그에서 전송 결과를 확인할 수 있도록 출력
         print(f"텔레그램 전송 결과: {res.status_code}, {res.text}")
     except Exception as e:
         print(f"텔레그램 요청 중 오류 발생: {e}")
 
 if __name__ == "__main__":
-    print("🚀 허렌버핏 리포트 생성 및 전송 시작...")
+    print("🚀 허렌버핏 리포트 생성 시작...")
     report_content = generate_report()
     send_telegram_message(report_content)
     print("✨ 작업 종료.")
