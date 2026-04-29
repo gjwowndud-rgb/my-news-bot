@@ -12,9 +12,9 @@ def generate_report():
         # API 키 설정
         genai.configure(api_key=GEMINI_API_KEY)
         
-        # [수정 포인트] 모델 경로를 'models/gemini-1.5-flash'로 명시합니다.
-        # 이 방식은 v1beta와 v1 버전 모두에서 가장 안정적으로 작동합니다.
-        model = genai.GenerativeModel(model_name='models/gemini-1.5-flash')
+        # [수정] 가장 범용적인 'gemini-1.5-flash' 이름을 사용합니다.
+        # 이 코드는 최신 라이브러리 버전(0.8.3 이상)에서 가장 잘 작동합니다.
+        model = genai.GenerativeModel('gemini-1.5-flash')
         
         prompt = """
         당신은 15년 경력의 글로벌 자산운용사 수석 전략가입니다. 
@@ -34,7 +34,6 @@ def generate_report():
         return response.text
 
     except Exception as e:
-        # 에러 발생 시 상세 메시지를 리턴합니다.
         return f"AI 분석 중 오류 발생: {str(e)}"
 
 def send_telegram_message(text):
