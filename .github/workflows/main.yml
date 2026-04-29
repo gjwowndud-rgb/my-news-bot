@@ -2,7 +2,7 @@ name: Daily Investment Report
 
 on:
   schedule:
-    - cron: '15 22 * * *'  # 한국 시간 오전 7:15
+    - cron: '15 22 * * *'  # 한국 시간 오전 7:15 (UTC 22:15)
   workflow_dispatch:       # 수동 실행 버튼
 
 jobs:
@@ -16,7 +16,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.11' # 최신 라이브러리 지원을 위해 3.11 사용
+          python-version: '3.11'
 
       - name: Install dependencies
         run: |
