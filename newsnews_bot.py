@@ -12,12 +12,12 @@ def generate_report():
         # API 설정
         genai.configure(api_key=GEMINI_API_KEY)
         
-        # [핵심 수정] 모델 경로를 풀 네임으로 지정하여 404 오류를 방지합니다.
-        # gemini-1.5-flash는 현재 구글에서 가장 권장하는 모델입니다.
-        model = genai.GenerativeModel(model_name='models/gemini-1.5-flash')
+        # [해결책] 모델명을 'gemini-1.5-flash'로만 입력합니다.
+        # 최신 라이브러리(0.8.3)에서는 이 이름이 가장 정확하게 작동합니다.
+        model = genai.GenerativeModel('gemini-1.5-flash')
         
         prompt = """
-        당신은 글로벌 자산운용사 전략가입니다. 아래 항목을 객관적으로 분석하세요.
+        당신은 15년 경력의 시니어 투자 전략가입니다. 아래 항목을 객관적으로 분석하세요.
         1. 국제 시장 자금 흐름: 금리, 환율, 원자재 지표 분석 및 자산 이동 방향.
         2. 국내 증권가 산업별 비중 및 수급: 외인/기관 매수 섹터 및 비중 변화 설명.
         3. 당일 추천 종목 (3종목): 선정 이유를 수급과 모멘텀 측면에서 기술.
@@ -25,7 +25,7 @@ def generate_report():
         [규칙]
         - 부동산 정보는 절대 제외할 것.
         - 냉철한 전문가 톤의 한국어로 작성.
-        - 이모지와 불렛포인트를 사용하여 가독성 확보.
+        - 가독성을 위해 이모지와 불렛포인트를 적절히 사용.
         """
 
         # 분석 생성
@@ -33,8 +33,8 @@ def generate_report():
         return response.text
 
     except Exception as e:
-        # 에러 발생 시 원인을 구체적으로 텔레그램에 전달
-        return f"⚠️ AI 분석 중 오류 발생:\n{str(e)}"
+        # 에러 발생 시 상세 내용을 텔레그램으로 전송
+        return f"⚠️ 분석 실패: {str(e)}"
 
 def send_telegram_message(text):
     url = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage"
@@ -46,7 +46,7 @@ def send_telegram_message(text):
     try:
         requests.post(url, json=payload)
     except Exception as e:
-        print(f"전송 실패: {e}")
+        print(f"전송 오류: {e}")
 
 if __name__ == "__main__":
     report_content = generate_report()
