@@ -21,7 +21,6 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          # 최신 구글 생성형 AI SDK인 google-genai 라이브러리를 설치합니다.
           pip install -U requests google-genai
 
       - name: Run script
