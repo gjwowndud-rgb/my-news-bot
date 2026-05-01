@@ -3,41 +3,67 @@ import requests
 from google import genai
 from datetime import datetime
 
+# 환경 변수 설정
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
 TELEGRAM_TOKEN = os.environ.get("TELEGRAM_TOKEN")
 CHAT_ID = os.environ.get("CHAT_ID")
 
 def generate_report():
     try:
+        # 최신 SDK 클라이언트 초기화
         client = genai.Client(api_key=GEMINI_API_KEY)
         current_date = datetime.now().strftime("%Y년 %m월 %d일")
         
-        # [안정성 최우선] 2.0 모델보다 쿼터가 수십 배 넉넉한 1.5-flash를 사용합니다.
-        model_id = 'gemini-1.5-flash'
-        
         prompt = f"""
         당신은 15년 경력의 글로벌 자산운용사 수석 전략가 '허렌버핏'입니다. ({current_date} 리포트)
+        
+        [작성 필수 구조]
         0. 오늘의 핵심 헤드라인 3줄 요약
-        1. 국제 시장의 돈의 흐름 (금리, 환율, 유가)
-        2. 국내 증권가 산업별 비중 및 수급
+        1. 국제 시장의 돈의 흐름 (금리, 환율, 유가 분석)
+        2. 국내 증권가 산업별 비중 및 수급 (외인/기관 중심)
         3. 당일 추천 종목 (3종목) 및 선정 이유
         4. 오늘의 주요 경제 캘린더
-        * 부동산 제외, 냉철한 전문가 톤, 한국어 작성.
+        
+        [작성 규칙]
+        - 발행일: {current_date}, 작성자: '허렌버핏'
+        - 부동산 정보는 절대 포함하지 말 것.
+        - 냉철하고 객관적인 전문가 톤의 한국어로 작성.
+        - 가독성을 위해 이모지와 불렛포인트를 적절히 사용.
         """
 
-        response = client.models.generate_content(model=model_id, contents=prompt)
-        return response.text if response.text else "⚠️ AI 응답이 비어있습니다."
+        # [핵심 수정] models/ 접두사 없이 모델 ID만 입력합니다.
+        # 이렇게 해야 v1beta 에러 없이 안정적인 v1 경로로 호출됩니다.
+        response = client.models.generate_content(
+            model='gemini-1.5-flash',
+            contents=prompt
+        )
+        
+        if not response.text:
+            return "⚠️ AI가 분석 내용을 생성하지 못했습니다."
+            
+        return response.text
 
     except Exception as e:
-        # 쿼터 초과 시 더 이상 시도하지 않도록 메시지 반환
-        return f"⚠️ 리포트 생성 실패: {str(e)}"
+        # 에러 발생 시 상세 원인을 리턴하여 텔레그램에서 즉각 확인
+        return f"⚠️ 허렌버핏 리포트 생성 실패: {str(e)}"
 
 def send_telegram_message(text):
-    if not text: return
+    if not text:
+        return
     url = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage"
-    payload = {"chat_id": CHAT_ID, "text": text}
-    requests.post(url, json=payload)
+    payload = {
+        "chat_id": CHAT_ID,
+        "text": text,
+        "parse_mode": "HTML" 
+    }
+    try:
+        res = requests.post(url, json=payload)
+        print(f"텔레그램 전송 결과: {res.status_code}")
+    except Exception as e:
+        print(f"텔레그램 전송 오류: {e}")
 
 if __name__ == "__main__":
+    print("🚀 리포트 생성 시도 중...")
     report_content = generate_report()
     send_telegram_message(report_content)
+    print("✨ 작업 종료.")
