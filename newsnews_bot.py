@@ -10,7 +10,7 @@ CHAT_ID = os.environ.get("CHAT_ID")
 
 def generate_report():
     try:
-        # 최신 SDK 클라이언트 초기화
+        # 최신 SDK 클라이언트 초기화 (v1beta가 아닌 안정적인 v1 경로를 타게 됩니다)
         client = genai.Client(api_key=GEMINI_API_KEY)
         current_date = datetime.now().strftime("%Y년 %m월 %d일")
         
@@ -26,13 +26,11 @@ def generate_report():
         
         [작성 규칙]
         - 발행일: {current_date}, 작성자: '허렌버핏'
-        - 부동산 정보는 절대 포함하지 말 것.
-        - 냉철하고 객관적인 전문가 톤의 한국어로 작성.
-        - 가독성을 위해 이모지와 불렛포인트를 적절히 사용.
+        - 부동산 정보 제외, 냉철하고 객관적인 전문가 톤, 한국어 작성.
+        - 이모지와 불렛포인트를 활용하여 가독성 확보.
         """
 
-        # [핵심 수정] models/ 접두사 없이 모델 ID만 입력합니다.
-        # 이렇게 해야 v1beta 에러 없이 안정적인 v1 경로로 호출됩니다.
+        # [중요] models/ 접두사 없이 모델 ID만 입력하여 404 에러를 원천 차단합니다.
         response = client.models.generate_content(
             model='gemini-1.5-flash',
             contents=prompt
@@ -44,26 +42,14 @@ def generate_report():
         return response.text
 
     except Exception as e:
-        # 에러 발생 시 상세 원인을 리턴하여 텔레그램에서 즉각 확인
         return f"⚠️ 허렌버핏 리포트 생성 실패: {str(e)}"
 
 def send_telegram_message(text):
-    if not text:
-        return
+    if not text: return
     url = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage"
-    payload = {
-        "chat_id": CHAT_ID,
-        "text": text,
-        "parse_mode": "HTML" 
-    }
-    try:
-        res = requests.post(url, json=payload)
-        print(f"텔레그램 전송 결과: {res.status_code}")
-    except Exception as e:
-        print(f"텔레그램 전송 오류: {e}")
+    payload = {"chat_id": CHAT_ID, "text": text}
+    requests.post(url, json=payload)
 
 if __name__ == "__main__":
-    print("🚀 리포트 생성 시도 중...")
     report_content = generate_report()
     send_telegram_message(report_content)
-    print("✨ 작업 종료.")
